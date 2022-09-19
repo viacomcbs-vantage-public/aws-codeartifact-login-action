@@ -14,6 +14,10 @@ inputs:
     description: Configure Poetry with temporary CodeArtifact credentials
     required: false
     default: "false"
+  aws-region:
+    description: AWS Region
+    required: true
+    default: "us-east-1"
 outputs:
   codeartifact-token:
     description: "Temporary token to authenticate with AWS CodeArtifact repositories"
@@ -30,8 +34,8 @@ runs:
       id: codeartifact-metadata
       shell: bash
       run: |
-        echo "::set-output name=codeartifact-token::$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --query authorizationToken --output text)"
-        echo "::set-output name=codeartifact-repo-url::$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --format pypi --query repositoryEndpoint --output text)"
+        echo "::set-output name=codeartifact-token::$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --aws-region ${{ inputs.aws-region }} --query authorizationToken --output text)"
+        echo "::set-output name=codeartifact-repo-url::$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --aws-region ${{ inputs.aws-region }} --format pypi --query repositoryEndpoint --output text)"
 
     - name: Configure package managers
       shell: bash
