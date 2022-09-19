@@ -1,0 +1,43 @@
+name: "AWS CodeArtifact login Action"
+description: Github Action to fetch a token for AWS CodeArtifact and (optionally) retrieve a repository URL
+inputs:
+  codeartifact-domain:
+    description: CodeArtifact domain to which the package repository belongs
+    required: true
+  codeartifact-domain-owner:
+    description: Owner (AWS Account) of the CodeArtifact domain
+    required: true
+  codeartifact-repository:
+    description: CodeArtifact repository for which to optionally fetch the URL
+    required: false
+  configure-poetry:
+    description: Configure Poetry with temporary CodeArtifact credentials
+    required: false
+    default: "false"
+outputs:
+  codeartifact-token:
+    description: "Temporary token to authenticate with AWS CodeArtifact repositories"
+    value: ${{ steps.codeartifact-metadata.outputs.codeartifact-token }}
+  codeartifact-repo-url:
+    description: "URL for the specified repository"
+    value: ${{ steps.codeartifact-metadata.outputs.codeartifact-repo-url }}
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Fetch CodeArtifact metadata
+      id: codeartifact-metadata
+      shell: bash
+      run: |
+        echo "::set-output name=codeartifact-token::$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --query authorizationToken --output text)"
+        echo "::set-output name=codeartifact-repo-url::$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --format pypi --query repositoryEndpoint --output text)"
+
+    - name: Configure package managers
+      shell: bash
+      run: |
+        pip config set site.index-url "https://aws:${{ steps.codeartifact-metadata.outputs.codeartifact-token }}@${{ steps.codeartifact-metadata.outputs.codeartifact-repo-url }}simple/"
+        if [ "${{ inputs.configure-poetry }}" == "true" ]; then
+          poetry config repositories.${{ inputs.codeartifact-repository }} ${{ steps.codeartifact-metadata.outputs.codeartifact-repo-url }}
+          poetry config http-basic.${{ inputs.codeartifact-repository }} aws ${{ steps.codeartifact-metadata.outputs.codeartifact-token }}
+        fi
