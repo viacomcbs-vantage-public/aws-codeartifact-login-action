@@ -19,10 +19,10 @@ inputs:
     required: true
     default: "us-east-1"
 outputs:
-  codeartifact-token:
+  token:
     description: "Temporary token to authenticate with AWS CodeArtifact repositories"
     value: ${{ steps.codeartifact-metadata.outputs.codeartifact-token }}
-  codeartifact-repo-url:
+  repo-url:
     description: "URL for the specified repository"
     value: ${{ steps.codeartifact-metadata.outputs.codeartifact-repo-url }}
 
