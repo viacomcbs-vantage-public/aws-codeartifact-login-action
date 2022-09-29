@@ -16,8 +16,12 @@ jobs:
           codeartifact-domain-owner: 123456789012
           codeartifact-repository: my-python-packages
           configure-poetry: true
-
+          configure-poetry-auth-file: true
       # ...
 ```
+### Outputs
+
+ - **token**: Temporary token to authenticate with AWS CodeArtifact repositories
+ - **repo-url**: URL for the specified repository
 
 ### Credits

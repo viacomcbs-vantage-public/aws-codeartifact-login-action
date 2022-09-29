@@ -14,6 +14,10 @@ inputs:
     description: Configure Poetry with temporary CodeArtifact credentials
     required: false
     default: "false"
+  configure-poetry-auth-file:
+    description: Configure Poetry `auth.toml` filename
+    required: false
+    default: "false"
   aws-region:
     description: AWS Region
     required: true
@@ -44,4 +48,15 @@ runs:
         if [ "${{ inputs.configure-poetry }}" == "true" ]; then
           poetry config repositories.${{ inputs.codeartifact-repository }} ${{ steps.codeartifact-metadata.outputs.repo-url }}
           poetry config http-basic.${{ inputs.codeartifact-repository }} aws ${{ steps.codeartifact-metadata.outputs.token }}
+          if [ "${{ inputs.configure-poetry-auth-file }}" == "true" ]; then
+            echo "Generating 'auth.toml` file..."
+            touch auth.toml
+            echo "[repositories]" >> auth.toml
+            echo "[repositories.${{ inputs.codeartifact-repository }}]" >> auth.toml
+            echo "url = \"${{ steps.codeartifact-metadata.outputs.repo-url }}\"" >> auth.toml
+            echo "[http-basic]" >> auth.toml
+            echo "[http-basic.${{ inputs.codeartifact-repository }}]" >> auth.toml 
+            echo "username = \"aws\"" >> auth.toml 
+            echo "password = \"${{ steps.codeartifact-metadata.outputs.token }}\"" >> auth.toml
+          fi
         fi
