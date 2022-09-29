@@ -7,6 +7,10 @@ inputs:
   codeartifact-domain-owner:
     description: Owner (AWS Account) of the CodeArtifact domain
     required: true
+  poetry-repository-name:
+    description: Poetry repository name
+    required: true
+    default: "codeartifact"
   codeartifact-repository:
     description: CodeArtifact repository for which to optionally fetch the URL
     required: false
@@ -50,8 +54,8 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.configure-poetry }}" == "true" ]; then
-          poetry config repositories.${{ inputs.codeartifact-repository }} ${{ steps.codeartifact-metadata.outputs.repo-url }}
-          poetry config http-basic.${{ inputs.codeartifact-repository }} aws ${{ steps.codeartifact-metadata.outputs.token }}
+          poetry config repositories.${{ inputs.poetry-repository-name }} ${{ steps.codeartifact-metadata.outputs.repo-url }}
+          poetry config http-basic.${{ inputs.poetry-repository-name }} aws ${{ steps.codeartifact-metadata.outputs.token }}
           echo "Poetry configured."
         fi
 
@@ -61,10 +65,10 @@ runs:
         if [ "${{ inputs.configure-poetry-auth-file }}" == "true" ]; then
           touch auth.toml
           echo "[repositories]" >> auth.toml
-          echo "[repositories.${{ inputs.codeartifact-repository }}]" >> auth.toml
+          echo "[repositories.${{ inputs.poetry-repository-name }}]" >> auth.toml
           echo "url = \"${{ steps.codeartifact-metadata.outputs.repo-url }}\"" >> auth.toml
           echo "[http-basic]" >> auth.toml
-          echo "[http-basic.${{ inputs.codeartifact-repository }}]" >> auth.toml 
+          echo "[http-basic.${{ inputs.poetry-repository-name }}]" >> auth.toml 
           echo "username = \"aws\"" >> auth.toml 
           echo "password = \"${{ steps.codeartifact-metadata.outputs.token }}\"" >> auth.toml
           echo "Poetry "auth.toml" generated."
