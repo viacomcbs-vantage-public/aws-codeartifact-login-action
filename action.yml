@@ -55,7 +55,7 @@ runs:
           echo "Poetry configured."
         fi
 
-    - name: Generate Poetry `auth.toml` file
+    - name: Generate Poetry "auth.toml" file
       shell: bash
       run: |
         if [ "${{ inputs.configure-poetry-auth-file }}" == "true" ]; then
@@ -67,5 +67,5 @@ runs:
           echo "[http-basic.${{ inputs.codeartifact-repository }}]" >> auth.toml 
           echo "username = \"aws\"" >> auth.toml 
           echo "password = \"${{ steps.codeartifact-metadata.outputs.token }}\"" >> auth.toml
-          echo "Poetry 'auth.toml` generated."
+          echo "Poetry "auth.toml" generated."
         fi
