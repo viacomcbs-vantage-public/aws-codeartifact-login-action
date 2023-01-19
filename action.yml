@@ -54,7 +54,7 @@ runs:
         echo "CLEAN_REPO_URL=${{ steps.codeartifact-metadata.outputs.repo-url }}"
         REPO_TOKEN="${{ steps.codeartifact-metadata.outputs.token }}"
         REPO_CLEAN_URL="${{ steps.codeartifact-metadata.outputs.repo-url }}"
-        pip config set site.index-url https://aws:${REPO_TOKEN}@${REPO_CLEAN_URL}simple/
+        pip config set global.index-url https://aws:${REPO_TOKEN}@${REPO_CLEAN_URL}simple/
         #pip config set site.index-url https://aws:${{ steps.codeartifact-metadata.outputs.token }}@${{ steps.codeartifact-metadata.outputs.repo-url }}simple/
         echo "CONFIG FILE"
         cat /home/runner/.config/pip/pip.conf
