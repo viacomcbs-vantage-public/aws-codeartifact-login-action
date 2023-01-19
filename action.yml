@@ -50,6 +50,8 @@ runs:
     - name: Configure PIP
       shell: bash
       run: |
+        echo "TOKEN=${{ steps.codeartifact-metadata.outputs.token }}"
+        echo "CLEAN_REPO_URL=${{ steps.codeartifact-metadata.outputs.repo-url }}"
         pip config set site.index-url "https://aws:${{ steps.codeartifact-metadata.outputs.token }}@${{ steps.codeartifact-metadata.outputs.repo-url }}simple/"
 
     - name: Configure Poetry
