@@ -42,8 +42,6 @@ runs:
       id: codeartifact-metadata
       shell: bash
       run: |
-        #echo "::set-output name=token::$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)"
-        #echo "::set-output name=repo-url::$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --region ${{ inputs.aws-region }} --format pypi --query repositoryEndpoint --output text | sed 's/https:\/\///')"
         AWS_TOKEN=$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)
         REPO_URL=$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --region ${{ inputs.aws-region }} --format pypi --query repositoryEndpoint --output text | sed 's/https:\/\///')
         echo "token=$AWS_TOKEN" >> $GITHUB_OUTPUT
