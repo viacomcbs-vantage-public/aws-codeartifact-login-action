@@ -42,13 +42,19 @@ runs:
       id: codeartifact-metadata
       shell: bash
       run: |
-        echo "::set-output name=token::$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)"
-        echo "::set-output name=repo-url::$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --region ${{ inputs.aws-region }} --format pypi --query repositoryEndpoint --output text)"
+        AWS_TOKEN=$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)
+        REPO_URL=$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --repository ${{ inputs.codeartifact-repository }} --region ${{ inputs.aws-region }} --format pypi --query repositoryEndpoint --output text | sed 's/https:\/\///')
+        echo "token=$AWS_TOKEN" >> $GITHUB_OUTPUT
+        echo "repo-url=$REPO_URL" >> $GITHUB_OUTPUT
+        
 
     - name: Configure PIP
       shell: bash
       run: |
-        pip config set site.index-url "https://aws:${{ steps.codeartifact-metadata.outputs.token }}@${{ steps.codeartifact-metadata.outputs.repo-url }}simple/"
+        pip config set global.index-url https://aws:${REPO_TOKEN}@${REPO_CLEAN_URL}simple/
+      env:
+        REPO_TOKEN: "${{ steps.codeartifact-metadata.outputs.token }}"
+        REPO_CLEAN_URL: "${{ steps.codeartifact-metadata.outputs.repo-url }}"
 
     - name: Configure Poetry
       shell: bash
