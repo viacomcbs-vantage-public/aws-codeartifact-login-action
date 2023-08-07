@@ -10,7 +10,7 @@ jobs:
       # ...
 
       - name: Authenticate to CodeArtifact
-        uses: source-ag/codeartifact-login-action@v1
+        uses: vimn-public/codeartifact-login-action@v1
         with:
           codeartifact-domain: my-domain
           codeartifact-domain-owner: 123456789012
