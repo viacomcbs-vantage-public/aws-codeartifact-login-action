@@ -26,6 +26,10 @@ inputs:
     description: AWS Region
     required: true
     default: "us-east-1"
+  codeartifact-dummy-token:
+    description: CodeArtifact Dummy Token (just for tests)
+    required: false
+    default: "false"
 outputs:
   token:
     description: "Temporary token to authenticate with AWS CodeArtifact repositories"
@@ -37,43 +41,50 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Get token
+      id: codeartifact-token
+      shell: bash
+      run: |
+        if [ "${{ inputs.codeartifact-dummy-token }}" == "false" ]; then
+          AWS_TOKEN=$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)
+          echo "token=$AWS_TOKEN" >> $GITHUB_OUTPUT
+        else
+          echo "We use fake token for testing purpose only!!!" >> $GITHUB_STEP_SUMMARY
+          echo "token=${{ inputs.codeartifact-dummy-token }}" >> $GITHUB_OUTPUT
+        fi
 
     - name: Fetch CodeArtifact metadata
       id: codeartifact-metadata
       shell: bash
       run: |
-        AWS_TOKEN=$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)
         REPO_URI="${{ inputs.codeartifact-domain }}-${{ inputs.codeartifact-domain-owner }}.d.codeartifact.${{ inputs.aws-region }}.amazonaws.com/pypi/${{ inputs.codeartifact-repository }}/"
         REPO_URL="https://$REPO_URI"
-        echo "token=$AWS_TOKEN" >> $GITHUB_OUTPUT
         echo "repo-uri=$REPO_URI" >> $GITHUB_OUTPUT
         echo "repo-url=$REPO_URL" >> $GITHUB_OUTPUT
 
     - name: Configure PIP
       shell: bash
       run: |
-        pip config set site.index-url "https://aws:${{ steps.codeartifact-metadata.outputs.token }}@${{ steps.codeartifact-metadata.outputs.repo-uri }}simple/"
+        pip config set site.index-url "https://aws:${{ steps.codeartifact-token.outputs.token }}@${{ steps.codeartifact-metadata.outputs.repo-uri }}simple/"
 
     - name: Configure Poetry
       shell: bash
+      if: ${{ inputs.configure-poetry == 'true' }}
       run: |
-        if [ "${{ inputs.configure-poetry }}" == "true" ]; then
-          poetry config repositories.${{ inputs.poetry-repository-name }} ${{ steps.codeartifact-metadata.outputs.repo-url }}
-          poetry config http-basic.${{ inputs.poetry-repository-name }} aws ${{ steps.codeartifact-metadata.outputs.token }}
-          echo "Poetry configured."
-        fi
+        poetry config repositories.${{ inputs.poetry-repository-name }} ${{ steps.codeartifact-metadata.outputs.repo-url }}
+        poetry config http-basic.${{ inputs.poetry-repository-name }} aws ${{ steps.codeartifact-token.outputs.token }}
+        echo "Poetry configured."
 
     - name: Generate Poetry "auth.toml" file
       shell: bash
+      if: ${{ inputs.configure-poetry-auth-file == 'true' }}
       run: |
-        if [ "${{ inputs.configure-poetry-auth-file }}" == "true" ]; then
-          touch auth.toml
-          echo "[repositories]" >> auth.toml
-          echo "[repositories.${{ inputs.poetry-repository-name }}]" >> auth.toml
-          echo "url = \"${{ steps.codeartifact-metadata.outputs.repo-url }}\"" >> auth.toml
-          echo "[http-basic]" >> auth.toml
-          echo "[http-basic.${{ inputs.poetry-repository-name }}]" >> auth.toml 
-          echo "username = \"aws\"" >> auth.toml 
-          echo "password = \"${{ steps.codeartifact-metadata.outputs.token }}\"" >> auth.toml
-          echo "Poetry "auth.toml" generated."
-        fi
+        touch auth.toml
+        echo "[repositories]" >> auth.toml
+        echo "[repositories.${{ inputs.poetry-repository-name }}]" >> auth.toml
+        echo "url = \"${{ steps.codeartifact-metadata.outputs.repo-url }}\"" >> auth.toml
+        echo "[http-basic]" >> auth.toml
+        echo "[http-basic.${{ inputs.poetry-repository-name }}]" >> auth.toml 
+        echo "username = \"aws\"" >> auth.toml 
+        echo "password = \"${{ steps.codeartifact-token.outputs.token }}\"" >> auth.toml
+        echo "Poetry "auth.toml" generated."
