@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: |
         AWS_TOKEN=$(aws codeartifact get-authorization-token --domain ${{ inputs.codeartifact-domain }} --domain-owner ${{ inputs.codeartifact-domain-owner }} --region ${{ inputs.aws-region }} --query authorizationToken --output text)
-        REPO_URI="${{ inputs.codeartifact-domain }}-${{ inputs.codeartifact-domain-owner }}.d.codeartifact.${{ inputs.aws-region }}.amazonaws.com/pypi/${{ inputs.codeartifact-repository }}/simple"
+        REPO_URI="${{ inputs.codeartifact-domain }}-${{ inputs.codeartifact-domain-owner }}.d.codeartifact.${{ inputs.aws-region }}.amazonaws.com/pypi/${{ inputs.codeartifact-repository }}/"
         REPO_URL="https://$REPO_URI"
         echo "token=$AWS_TOKEN" >> $GITHUB_OUTPUT
         echo "repo-uri=$REPO_URI" >> $GITHUB_OUTPUT
