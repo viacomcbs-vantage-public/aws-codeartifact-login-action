@@ -1,0 +1,45 @@
+name: Testing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+
+      - name: Run action
+        uses: ./
+        with:
+          codeartifact-domain: my-domain
+          codeartifact-domain-owner: 123456789012
+          codeartifact-repository: my-python-packages
+          codeartifact-dummy-token: thisisnotsosecretfile
+          configure-poetry: true
+          configure-poetry-auth-file: true
+
+      - name: Debug - info about PIp configuration
+        run: pip config debug
+
+      - name: Print Configuration
+        run: | 
+          cat ~/.config/pip/pip.conf
+          cat ~/.config/pypoetry/auth.toml
+          cat ~/.config/pypoetry/config.toml
+          cat auth.toml
+
+      - name: Generate MD5 Sum
+        run: md5sum ~/.config/pip/pip.conf ~/.config/pypoetry/auth.toml ~/.config/pypoetry/config.toml auth.toml
+
+      - name: Verify checksum
+        run: md5sum -c .github/tests.md5sum
