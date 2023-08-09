@@ -33,7 +33,7 @@ inputs:
 outputs:
   token:
     description: "Temporary token to authenticate with AWS CodeArtifact repositories"
-    value: ${{ steps.codeartifact-metadata.outputs.token }}
+    value: ${{ steps.codeartifact-token.outputs.token }}
   repo-url:
     description: "URL for the specified repository"
     value: ${{ steps.codeartifact-metadata.outputs.repo-url }}
